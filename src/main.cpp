@@ -1,38 +1,35 @@
 #include <Arduino.h>
 
+#include <Wire.h> // Biblioteca utilizada para fazer a comunicação com o I2C
+#include <LiquidCrystal_I2C.h> // Biblioteca utilizada para fazer a comunicação com o display 20x4 
+
 #include "Arduino_FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
-#include <OneWire.h>
-#include <DallasTemperature.h>
-
-const int sensor_temperatura = 12; 
 const int potenciometro = A0;
 const int set_button = 13;
 
 TaskHandle_t potenciometroTaskH;
 TaskHandle_t temperaturaTaskH;
 
-const int send_gantt = 1;
 uint16_t valor_potenciometro; 
-float temperatura_c;
 uint8_t temp_pot;
 uint8_t temp_set;
 
 SemaphoreHandle_t SerialMutex;
-
-OneWire oneWire(sensor_temperatura); 
-DallasTemperature sensor(&oneWire); 
-DeviceAddress endereco_temp;
+LiquidCrystal_I2C lcd(0x3F, 20, 4);
 
 void sendGantt(const char *name, unsigned int stime, unsigned int etime);
 void potenciometroTask(void *arg);
 void temperaturaTask(void *arg);
 
 void setup() {
-  Serial.begin(115200); 
-  sensor.begin();
+  Serial.begin(9600);
+  
+  lcd.init(); 
+  lcd.backlight(); 
+  lcd.clear(); 
 
   pinMode(set_button, INPUT);
 
@@ -82,6 +79,10 @@ void potenciometroTask(void *arg) {
       if(abs(temp_pot - temp_pot_ant) >= 1) {
         temp_pot_ant = temp_pot;
         prev_temp_set = true;
+        lcd.setCursor(0,0);
+        lcd.print("TEMPERATURA DESEJADA");
+        lcd.setCursor(0,1);
+        lcd.print(temp_pot);
         Serial.print("Teperatura desejada: ");
         Serial.println(temp_pot); 
       }
@@ -91,6 +92,10 @@ void potenciometroTask(void *arg) {
       if(button_state && !prev_button_state && prev_temp_set) {
         temp_set = temp_pot;
         prev_temp_set = false;
+        lcd.setCursor(0,2);
+        lcd.print("TEMPERATURA SETADA");
+        lcd.setCursor(0,3);
+        lcd.print(temp_set);
         Serial.print("Temperatura setada: ");
         Serial.println(temp_set);       
       }
@@ -105,17 +110,8 @@ void temperaturaTask(void *arg) {
 
     while (true) {
 
-      sensor.requestTemperatures();
-
-      if(sensor.getAddress(endereco_temp, 0)) {
-        temperatura_c = sensor.getTempC(endereco_temp);
-        //Serial.print("Temperatura: ");
-        //Serial.println(temperatura_c);
-      } 
       
-      else {
-        //Serial.println("Erro ao tentar ler o sensor");
-      }
+    Serial.println("TEMP");
 
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
