@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#include <Wire.h> // Biblioteca utilizada para fazer a comunicação com o I2C
-#include <LiquidCrystal_I2C.h> // Biblioteca utilizada para fazer a comunicação com o display 20x4 
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h> 
 
 #include "Arduino_FreeRTOS.h"
 #include "task.h"
@@ -63,7 +63,7 @@ void sendGantt(const char *name, unsigned int stime, unsigned int etime) {
       Serial.println(etime);
       xSemaphoreGive(SerialMutex);                           
   }
-}
+} 
 
 uint8_t temp_pot_ant = 0;
 
@@ -74,7 +74,7 @@ void potenciometroTask(void *arg) {
     while(true) {
       
       valor_potenciometro = analogRead(potenciometro);
-      temp_pot = map(valor_potenciometro, 0, 1023, 25, 50);
+      temp_pot = map(valor_potenciometro, 0, 1023, 25, 42);
 
       if(abs(temp_pot - temp_pot_ant) >= 1) {
         temp_pot_ant = temp_pot;
@@ -83,6 +83,8 @@ void potenciometroTask(void *arg) {
         lcd.print("TEMPERATURA DESEJADA");
         lcd.setCursor(0,1);
         lcd.print(temp_pot);
+        lcd.setCursor(2,1);
+        lcd.print("C");
         Serial.print("Teperatura desejada: ");
         Serial.println(temp_pot); 
       }
@@ -96,6 +98,8 @@ void potenciometroTask(void *arg) {
         lcd.print("TEMPERATURA SETADA");
         lcd.setCursor(0,3);
         lcd.print(temp_set);
+        lcd.setCursor(2,3);
+        lcd.print("C");
         Serial.print("Temperatura setada: ");
         Serial.println(temp_set);       
       }
